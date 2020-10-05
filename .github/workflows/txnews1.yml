@@ -32,7 +32,7 @@ jobs:
         env:
           TXNEWS_SIGN: ${{ secrets.TXNEWS_SIGN1 }}
           TXNEWS_COOKIE: ${{ secrets.TXNEWS_COOKIE1 }}
-          TXNEWS_VIDEO: ${{ secrets.TXNEWS_VIDE1O }}
+          TXNEWS_VIDEO: ${{ secrets.TXNEWS_VIDEO1 }}
           PUSH_KEY: ${{ secrets.PUSH_KEY }}
           BARK_PUSH: ${{ secrets.BARK_PUSH }}
           TXNEWS_NOTIFY_CONTROL: ${{ secrets.TXNEWS_NOTIFY_CONTROL }}
