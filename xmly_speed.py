@@ -1,3 +1,10 @@
+'''
+Author: whyour
+Github: https://github.com/whyour
+Date: 2020-11-19 23:25:22
+LastEditors: whyour
+LastEditTime: 2020-12-14 23:21:59
+'''
 import requests
 import json
 import rsa
@@ -23,8 +30,10 @@ cookiesList = [cookies1, ]   # 多账号准备
 # 通知服务
 BARK = ''                   # bark服务,自行搜索; secrets可填;形如jfjqxDx3xxxxxxxxSaK的字符串
 SCKEY = ''                  # Server酱的SCKEY; secrets可填
-TG_BOT_TOKEN = ''           # telegram bot token 自行申请
-TG_USER_ID = ''             # telegram 用户ID
+TG_BOT_TOKEN = ''           # tg机器人的TG_BOT_TOKEN; secrets可填
+TG_USER_ID = ''             # tg机器人的TG_USER_ID; secrets可填
+TG_PROXY_IP = ''            # tg机器人的TG_PROXY_IP; secrets可填
+TG_PROXY_PORT = ''               # tg机器人的TG_PROXY_PORT; secrets可填
 
 ###################################################
 # 对应方案1:  GitHub action自动运行,此处无需填写;
@@ -56,7 +65,7 @@ if "XMLY_SPEED_COOKIE" in os.environ:
 # 可选项
 # 自定义设备命名,非必须 ;devices=["iPhone7P","huawei"];与cookiesList对应
 devices = []
-notify_time = 19                            # 通知时间,24小时制,默认19
+notify_time = 23                            # 通知时间,24小时制,默认19
 XMLY_ACCUMULATE_TIME = 1                    # 希望刷时长的,此处置1,默认打开;关闭置0
 UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 iting/1.0.12 kdtunion_iting/1.0 iting(main)/1.0.12/ios_1"
 # 非iOS设备的需要的自行修改,自己抓包 与cookie形式类似
@@ -977,22 +986,20 @@ def bark(title, content):
         f"""https://api.day.app/{bark_token}/{title}/{content}""")
     print(response.text)
 
-
-def telegram_bot(title, content):
+def telegram(title, content):
     print("\n")
-    tg_bot_token = TG_BOT_TOKEN
-    tg_user_id = TG_USER_ID
-    if "TG_BOT_TOKEN" in os.environ and "TG_USER_ID" in os.environ:
-        tg_bot_token = os.environ["TG_BOT_TOKEN"]
-        tg_user_id = os.environ["TG_USER_ID"]
-    if not tg_bot_token or not tg_user_id:
-        print("Telegram推送的tg_bot_token或者tg_user_id未设置!!\n取消推送")
+    bot_token = TG_BOT_TOKEN
+    user_id = TG_USER_ID
+    if not bot_token or not user_id:
+        print("tg服务的bot_token或者user_id未设置!!\n取消推送")
         return
-    print("Telegram 推送开始")
-    send_data = {"chat_id": tg_user_id, "text": title +
-                 '\n\n'+content, "disable_web_page_preview": "true"}
-    response = requests.post(
-        url='https://api.telegram.org/bot%s/sendMessage' % (tg_bot_token), data=send_data)
+    print("tg服务启动")
+    url=f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'chat_id': str(TG_USER_ID), 'text': f"""{title}\n\n{content}""", 'disable_web_page_preview': 'true'}
+    proxyStr = "http://{}:{}".format(TG_PROXY_IP, TG_PROXY_PORT)
+    proxies = {"http": proxyStr, "https": proxyStr }
+    response = requests.post(url=url,headers=headers, params=payload,proxies=proxies)
     print(response.text)
 
 
@@ -1029,18 +1036,20 @@ def run():
 
         print("###"*20)
         print("\n"*4)
-    if _notify_time.split()[0] == str(notify_time) and int(_notify_time.split()[1]) > 30:
-        # if 1:
+    if int(_notify_time.split()[0]) == notify_time and int(_notify_time.split()[1]) >= 30:
+    #if 1:
         message = ''
         for i in table:
-            message += f"[{i[0].replace(' ',''):<9}]: {i[1]:<6.2f} (＋{i[2]:<4.2f}) {i[3]:<7.2f} {i[4]}\\30\n"
-        message += "⭕tips:第30天需要手动签到 by zero_s1, (*^_^*)欢迎打赏 "
-        if len(table) <= 4:
-            message = "【设备】| 当前剩余 | 今天| 历史| 连续签到\n"+message
+            message += f"【设备】：{i[0].replace(' ',''):<9}\n"
+            message += f"【当前剩余】：{i[1]:<6.2f}\n"
+            message += f"【今天】：＋{i[2]:<4.2f}\n"
+            message += f"【历史】：{i[3]:<7.2f}\n"
+            message += f"【连续签到】：{i[4]}/30\n"
+            message += f"\n"
 
         bark("⏰ 喜马拉雅极速版", message)
         serverJ("⏰ 喜马拉雅极速版", message)
-        telegram_bot("⏰ 喜马拉雅极速版", message)
+        telegram("⏰ 喜马拉雅极速版", message)
 
 
 if __name__ == "__main__":
