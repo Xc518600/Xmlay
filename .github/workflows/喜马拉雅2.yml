@@ -1,4 +1,4 @@
-name: 喜马拉雅极速版2妈
+name: 喜马拉雅极速版妈
 
 on:
   schedule:
@@ -20,7 +20,12 @@ jobs:
       - name: 'Install requirements'
         run: pip install -r ./requirements.txt 
         
-      - name: 'run 喜马拉雅极速版2' 
+      - name: 'run 喜马拉雅极速版' 
         run: python3 xmly_speed.py 
         env:
-            XMLY_SPEED_COOKIE: ${{ secrets.XMLY_SPEED_COOKIE2 }}
+            XMLY_SPEED_COOKIE: ${{ secrets.XMLY_SPEED_COOKIE2 }}  #必须
+            # XMLY_ACCUMULATE_TIME: ${{ secrets.XMLY_ACCUMULATE_TIME }} #非私密信息，去掉
+            BARK: ${{ secrets.BARK }}     # bark服务
+            SCKEY: ${{ secrets.SCKEY }}   # server酱服务
+            TG_BOT_TOKEN: ${{secrets.TG_BOT_TOKEN}} # tg通知token
+            TG_USER_ID:  ${{secrets.TG_USER_ID}}    # tg通知id
