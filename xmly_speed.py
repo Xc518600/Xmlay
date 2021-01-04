@@ -707,6 +707,7 @@ def account(cookies):
 当前剩余:{total}
 今日获得:{todayTotal}
 累计获得:{historyTotal}
+
 """)
     return total, todayTotal, historyTotal
 
