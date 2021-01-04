@@ -29,3 +29,4 @@ jobs:
             SCKEY: ${{ secrets.SCKEY }}   # server酱服务
             TG_BOT_TOKEN: ${{secrets.TG_BOT_TOKEN}} # tg通知token
             TG_USER_ID:  ${{secrets.TG_USER_ID}}    # tg通知id
+            AUTO_TAKE_OUT: ${{ secrets.AUTO_TAKE_OUT }}  #非必须 是否自动提现支付宝20
