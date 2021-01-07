@@ -30,9 +30,9 @@ jobs:
         run: |
           node Task/txnews.js
         env:
-          TXNEWS_SIGN: ${{ secrets.TXNEWS_SIGN3 }}
-          TXNEWS_COOKIE: ${{ secrets.TXNEWS_COOKIE3 }}
-          TXNEWS_VIDEO: ${{ secrets.TXNEWS_VIDEO3 }}
+          TXNEWS_SIGN: ${{ secrets.TXNEWS_SIGN4 }}
+          TXNEWS_COOKIE: ${{ secrets.TXNEWS_COOKIE4 }}
+          TXNEWS_VIDEO: ${{ secrets.TXNEWS_VIDEO4 }}
           PUSH_KEY: ${{ secrets.PUSH_KEY }}
           BARK_PUSH: ${{ secrets.BARK_PUSH }}
           TXNEWS_NOTIFY_CONTROL: ${{ secrets.TXNEWS_NOTIFY_CONTROL }}
