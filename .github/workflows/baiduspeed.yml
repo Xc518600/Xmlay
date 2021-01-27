@@ -25,7 +25,7 @@ run: |
       - name: '运行 【百度极速】'
 if: env.BAIDU_COOKIE
 run: |
-          node baidu_speed.js
+          node Task/baidu_speed.js
         env:
 BAIDU_CASH: ${{ secrets.BAIDU_CASH }}
 PUSH_KEY: ${{ secrets.PUSH_KEY }}
