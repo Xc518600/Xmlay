@@ -1,7 +1,9 @@
 /*
+更新时间:2021-02-02 19:50
 百度极速版签到任务，使用脚本有黑号严重，请谨慎使用‼️
 赞赏:百度极速邀请码`RW9ZSW 点击链接立得红包，最高100元！https://dwz.cn/Oilv4CJ1`,农妇山泉 -> 有点咸，万分感谢
 本脚本默认使用chavyleung大佬和Nobyda的贴吧ck，获取方法请看大佬仓库说明，内置自动提现，提现金额默认30元，当当前时间为早上6点且达到提现金额时仅运行提现任务，提现金额小于设置金额时继续运行其他任务。
+增加百度任务开关，Actions中Secrets为BAIDU_TASK，值填true或者false
 支持BoxJs多账号，需手动填写，用&或者换行隔开
 ~~~~~~~~~~~~~~~~
 */
@@ -10,7 +12,7 @@ let CookieArr = [],cashArr=[];
 let UA = `Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SP-engine/2.24.0 info baiduboxapp/5.1.1.10 (Baidu; P2 14.2)`;
 const notify = $.isNode() ? require('./sendNotify') : '';
 const baiducks = $.getdata(`cookie_baidu`);
-const taskON = $.getdata(`task_baidu`)||"true"//除提现和兑换外其他任务开关;
+let taskON = $.getdata(`task_baidu`)||"true"//除提现和兑换外其他任务开关;
 let isblack = "false";
 if ($.isNode()) {
   if (process.env.BAIDU_COOKIE && process.env.BAIDU_COOKIE.indexOf('&') > -1) {
@@ -19,7 +21,7 @@ if ($.isNode()) {
  else if (process.env.BAIDU_COOKIE && process.env.BAIDU_COOKIE.indexOf('\n') > -1) {
   BDCookie = process.env.BAIDU_COOKIE.split('\n');
   } else {
-  BDCookie = process.env.BAIDU_COOKIE
+  BDCookie = process.env.BAIDU_COOKIE.split()
   };
   if (process.env.BAIDU_CASH && process.env.BAIDU_CASH.indexOf('&') > -1) {
   BDCASH = process.env.BAIDU_CASH.split('&');
@@ -27,8 +29,9 @@ if ($.isNode()) {
  else if (process.env.BAIDU_CASH && process.env.BAIDU_CASH.indexOf('\n') > -1) {
   BDCASH = process.env.BAIDU_CASH.split('\n');
   } else {
-  BDCASH = process.env.BAIDU_CASH
+  BDCASH = process.env.BAIDU_CASH.split()
   }
+
   Object.keys(BDCookie).forEach((item) => {
         if (BDCookie[item]) {
           CookieArr.push(BDCookie[item])
@@ -66,12 +69,20 @@ if ($.isNode()) {
       cookieval = CookieArr[i];
       withcash = cashArr[i];
       $.index = i + 1;
+      let username = null,
+          chargemoney = 0,
+          availablecoin = 0;
       await userInfo();
-      if (isblack == "true") {
+     if (isblack == true) {
         $.msg($.name + " 账号" + username + "已黑号", "您的金币和余额已被冻结，请联系客服处理");
         continue;
       }
       await $.wait(1000);
+      if ($.isNode()) {
+        if (process.env.BAIDU_TASK) {
+         taskON = process.env.BAIDU_TASK
+       }
+      } 
       if (taskON == "true") {
         $.desc = "";
         await firstbox();
@@ -99,7 +110,7 @@ function getsign() {
         $.post(signurl, async(error, response, data) =>{
             let get_sign = JSON.parse(data);
             if (get_sign.errno == 0) {
-                $.desc = get_sign.data.tips+` 收益: $ {get_sign.data.bonus.coin}💰\n`;
+                $.desc = get_sign.data.tips+` 收益: ${get_sign.data.bonus.coin}💰\n`;
                 $.log($.desc+"\n"+data);
                 await invite()
             } else {
@@ -114,52 +125,53 @@ function getsign() {
 }
 
 function userInfo() {
-    return new Promise((resolve, reject) => {
-     setTimeout(() =>{
-       let infourl = {
-            url: `https://haokan.baidu.com/activity/h5/income?productid=2&from=1005640h&network=1_0&osname=baiduboxapp`,
-           headers: {
-             Cookie: cookieval,
-             'User-Agent': UA
-           }
-        };
-        $.get(infourl, async(error, resp, data) => {
-            try {
-                if (resp.statusCode == 200) {
-                    username = "null";
+  return new Promise((resolve, reject) =>{
+    setTimeout(() =>{
+      let infourl = {
+        url: `https://haokan.baidu.com/activity/h5/income?productid=2&from=1005640h&network=1_0&osname=baiduboxapp`,
+        headers: {
+          Cookie: cookieval,
+          'User-Agent': UA
+        }
+      };
+      $.get(infourl, async(error, resp, data) =>{
+  try {
+      if (resp.statusCode == 200) {
+                  username = "null";
                  if(data.match(/user_name\":\"([\w+\\]+)/)){
                     username = unescape(data.match(/user_name\":\"([\w+\\]+)/)[1].replace(/\\/g, "%"))
-               }
+                 }
                     chargemoney = data.match(/charge_money":"(\d+\.\d+)/)[1],
+                    enabledmoney = data.match(/enabled_money":(\d+)/)[1],
                     waitingcoin = data.match(/waiting_coin":(\d+)/)[1],
                     availablecoin = data.match(/available_coin":(\d+)/)[1],
                     invitecode = data.match(/invite_code":"(\w+)/)[1],
                     coinenabled = data.match(/coin_enabled":(\d+)/)[1]
-                    rate = data.match(/exchange_rate":(\d+)/)[1]
-                    isblack = data.match(/is_black":(\w+)/)[1]
-               if (coinenabled > 100){
-                    coinnum = parseInt(coinenabled/100)*100
-                   await coinexChange()
+                    if (coinenabled > 100) {
+                    coinnum = parseInt(coinenabled / 100) * 100;
+                    await coinexChange()
                   }
-                }
-                 $.sub = " 昵称:"+username+" 现金:"+ chargemoney+"元 金币:"+availablecoin;
-                 $.log("\n********** 昵称:"+username+ " 现金:"+chargemoney+"元 **********\n");
-             $.setdata(username,"baidu_nick")
-                if (Number(chargemoney) >= Number(withcash) && $.time("HH") == "06") {
-                   await withDraw(withcash)
-                if ($.isNode()) {
-                  await notify.sendNotify($.name+" 成功提现"+withcash+"元\n"+$.sub)
-                 }
-                   $.done()
-                }
-            } catch(error) {
-                $.msg($.name, "获取用户信息失败"),
-                $.log("用户信息详情页错误\n" + error)
-            }
-            resolve()
-        })
-      },1000)
-   })
+                    //rate = data.match(/exchange_rate":(\d+)/)[1]
+                    isblack = data.match(/is_black":(\w+)/)[1]
+               }
+                  $.sub = " 昵称:" + username + " 现金:" + chargemoney + "元 金币:" + availablecoin;
+                  $.log("\n********** 昵称:" + username + " 现金:" + chargemoney + "元 **********\n");
+                  if (enabledmoney>500&&parseInt(enabledmoney/100) >= Number(withcash) && $.time("HH") == "06") {
+                    await withDraw(withcash);
+                    if ($.isNode()) {
+                      await notify.sendNotify($.name + " 成功提现" + withcash + "元\n" + $.sub)
+                    }
+                    $.done()
+              }
+        } catch(error) {
+          $.msg($.name, "获取用户信息失败","请更换Cookie")
+          $.log("用户信息详情页错误\n" + error + "\n" + formatJson(data.match(/window\.PAGE_DATA = (.+)/)).replace(new RegExp("\\\\\"", "gm"), "\""))
+        }
+        resolve()
+      })
+    },
+    1000)
+  })
 }
 
 function withDraw(cash) {
@@ -279,19 +291,19 @@ async function getConfigs() {
         tid = arr.id;
         taskType = arr.type;
         if (arr.taskStatus == "1") {
-          $.log(taskName + " 已完成");
+          $.log(taskName + " 已完成\n");
           $.desc += taskName + "✅ 已完成\n";
         } else if (taskType == 'openApp') {
           RefererUrl = arr.adLink;
-          $.log("\n           "+taskName+" 类型: "+arr.type_name+"       ")
+          $.log("\n"+taskName+" 类型: "+arr.type_name+"       ")
         if( tid =="815"){
-          RefererUrl="https://haokan.baidu.com/activity/goldcoin/?productid=2&pd=2&tab=guide"
+          RefererUrl="https://eopa.baidu.com/page/pagekey-ASKWNd8W?productid=2&type=1&tid=815"
          }
-             await activeBox()
+         await activeBox()
         } else if (taskType == 'watch') {
              tips = arr.tips;
              count = arr.total_count;
-             $.log("\n        "+taskName + tips + "总计" + count + "次      ");
+             $.log("\n"+taskName + tips + "总计" + count + "次      ");
           if (arr.taskStatus == 0) {
             await $.wait(2000);
             await get_search("184")
@@ -309,11 +321,11 @@ async function getConfigs() {
       tid = "817"
       taskName = "【"+tasks[x].data.unOpenHeadBoxDialog.btn[0].btnText+"】"
       RefererUrl = tasks[x].data.unOpenHeadBoxDialog.btn[0].iosAdUrl
-      $.log("\n              "+taskName+"        ")
+      $.log("\n"+taskName+"  ")
       await activeBox()
 }
     if (tasks[x].data.gameheader.coinInfo.coinStatus == 2) {
-      $.desc += "【头部宝箱】✅ 总计金币" + tasks[x].data.gameheader.coinInfo.coinCount + "\n";
+      $.desc += "\n【头部宝箱】✅ 总计金币" + tasks[x].data.gameheader.coinInfo.coinCount + "\n";
       $.log($.desc)
     } else {
       for (headerbox of tasks[x].data.gameheader.progressList) {
@@ -331,7 +343,7 @@ async function getConfigs() {
             if (jingangType == 2) {
                 if (tasks[x].data.jingang.countDown[tid].countDown == 0) {
                     await $.wait(1000);
-                    $.log("\n             "+taskName+"       ");
+                    $.log("\n"+taskName+"       ");
                     await activeBox();
                 } else {
                     $.log("\n"+taskName+ " 请等待" +Number(tasks[x].data.jingang.countDown[tid].countDown / 60).toFixed(2) + "分钟")
@@ -361,7 +373,7 @@ function firstbox() {
       } else if (get_first.err_no == 10079) {
         $.desc += "【首页宝箱】✅ " + get_first.tip + '\n'
       } else if (get_first.err_no == 10060) {
-        $.log("首页宝箱开启失败"+get_first.tip)
+        $.log("首页宝箱开启失败"+get_first.tip+"\n")
       }
       resolve()
     })
@@ -384,11 +396,11 @@ function activeBox() {
        if ((tid == 587 || tid == 590) && act_box.errno == 0) {
         await get_pkg()
       } else if (act_box.errno == 1){
-        $.desc+= "【taskName】"+ act_box.msg;
-        $.log(act_box.msg+"，请检查Cookie是否包含BAIDUID");
+        $.desc+= "【taskName】"+ act_box.msg+"\n";
+        $.log(act_box.msg+"，请检查Cookie是否包含BAIDUCUID;\n");
         return
-      } else if (typeof act_box.data != "undefined"&&act_box.data.code == "EquipmentComplete") {
-        $.log("          "+ act_box.data.data)
+      } else if (data.indexOf("EquipmentComplete") >-1) {
+        $.log(act_box.data.data+"\n")
       } else {
         //$.log(formatJson(data))
         await get_pkg()
@@ -401,7 +413,6 @@ function activeBox() {
     })
   })
 }
-
 
 //视频
 function get_pkg() {
@@ -485,10 +496,10 @@ function get_search(cmd) {
             searchname = items.data.title;
             author = items.data.author
             if (items.data.mode == "video" || items.data.type == "video") {
-              $.log(" 观看视频: " + searchname + "  —————— " + author);
+              $.log(" 观看视频: " + searchname + "  ------------ " + author);
             }
             else if (items.data.mode == "text") {
-              $.log(" 阅读短文: " + searchname + "\n " + "  —————— " + items.data.tag ? items.data.tag: "");
+              $.log(" 阅读短文: " + searchname + "\n " + "  ------------ " + items.data.tag ? items.data.tag: "");
             }
             else if (items.data.mode == "ad") {
               $.log(" 打开广告: " + author + ": " + searchname);
